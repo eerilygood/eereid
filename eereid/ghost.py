@@ -598,12 +598,12 @@ class ghost():
         plt.legend(frameon=True,framealpha=0.8)
 
     def plot_match(self, sample, true_label=None, n=10):
-
+        
         if type(sample) is int:
             sample,sample0=self.qx[sample],sample
             if true_label is None:
                 true_label=self.qy[sample0]
-
+        
         embed=self.embed(np.array([sample]))
         dist=self.distance.multi_distance(self.gemb,embed)
         idx=np.argsort(dist)[:n]
@@ -653,12 +653,12 @@ class ghost():
         # Normalize the activation map between 0 and 1 for visualization
         activation_map = tf.maximum(activation_map, 0)  # Ensure non-negative values
         heatmap = activation_map[0] 
-        heatmap = heatmap / tf.math.reduce_max(heatmap)  # Normalize               
+        heatmap = heatmap / tf.math.reduce_max(heatmap)  # Normalize      
         # Scale heatmap
         heatmap = tf.expand_dims(heatmap, axis=-1)  # Now it has shape [height, width, 1]
         heatmap = tf.image.resize(heatmap, (image.shape[1], image.shape[2]),method='bilinear')
-        heatmap = tf.squeeze(heatmap, axis=-1)  # Back to shape [height, width]
-        
+        heatmap = tf.squeeze(heatmap, axis=-1)  # Back to shape [height, width]         
+
         htm=heatmap.numpy()
         image=image[0]
         image=image[::-1]
@@ -718,9 +718,13 @@ class haunting(ghost):
             obj._preprocess()
             obj.tx,obj.ty,obj.qx,obj.qy,obj.gx,obj.gy=datasplit(obj.x,obj.y,obj.mods())
             obj._preprocess_train()
+
+        self.qx=self.objs[0].qx
+        self.gx=self.objs[0].gx
+
     def _embed(self,data):
         self._log("Embedding data using the ensemble",0)
-        return np.concatenate([obj.model._embed(data) for obj in self.objs],axis=1)
+        return np.concatenate([obj.model.embed(data) for obj in self.objs],axis=1)
 
     def _singular_eval(self):
         self._log("Starting ensemble type evaluation",1)
@@ -776,6 +780,23 @@ class haunting(ghost):
             ret.append([f"Submodel {i+1}:",1])
             ret.append([obj.explain(),2])
         return various_tags(ret)
+    
+    def embed(self,data):
+        self._log("Embedding data",0)
+        # self.assert_trained()
+        for obj in self.objs:
+            obj.assert_trained()
+        data=self.apply_later_preprocessing(data)
+
+        return self._embed(data)
+    
+    def plot_activation_heatmaps(self,image):
+        for obj in self.objs:
+            obj.plot_activation_heatmap(image)
+    
+    def plot_lossess(self):
+        for obj in self.objs:
+            obj.plot_loss()
 
 
 
