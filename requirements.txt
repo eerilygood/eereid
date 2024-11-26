@@ -2,4 +2,5 @@ numpy
 tensorflow
 requests
 matplotlib
+scikit-learn
 tqdm
