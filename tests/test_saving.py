@@ -12,7 +12,6 @@ class SavingTest(unittest.TestCase):
            loss=ee.losses.extended_triplet(),
            model=ee.models.conv(),
            preprocessing=ee.prepros.subsample(0.1),
-           novelty=ee.novelty.knn(),
            triplet_count=100)
         
         cls.g["epochs"] = 1
