@@ -535,7 +535,7 @@ class ghost():
         return accs
 
 
-    def plot_embeddings(self,alpha=1.0):
+    def plot_embeddings(self,alpha=1.0,max_classes=5,plot_linewidth=0.5):
         self._log("Plotting the embeddings",1)
         from sklearn.decomposition import PCA
 
@@ -543,6 +543,19 @@ class ghost():
         emb=pca.fit_transform(self.emb)
         qemb=pca.transform(self.qemb)
         gemb=pca.transform(self.gemb)
+
+        # FA = FactorAnalysis(n_components=2)
+        # emb = FA.fit_transform(self.emb)
+        # qemb = FA.transform(self.qemb)
+        # gemb = FA.transform(self.gemb)
+
+        unique_ty = list(set(self.ty))
+        selected_ty = unique_ty[:max_classes]
+
+        # mask = np.isin(self.ty, selected_classes)
+        # mask_emb = emb[mask]
+        # mask_ty = np.array(self.ty)[mask]
+
 
         classes=list(set(self.y))
         vmin,vmax=min(classes),max(classes)
@@ -554,6 +567,13 @@ class ghost():
         plt.subplot(1,2,1)
 
         plt.scatter(emb[:,0],emb[:,1],c=self.ty,alpha=alpha,vmin=vmin,vmax=vmax)
+        # plt.plot(mask_emb[:,0],mask_emb[:,1],'-o')
+
+        for i in range(len(selected_ty)):
+            mask = np.isin(self.ty, selected_ty[i])
+            mask_emb = emb[mask]
+            plt.plot(mask_emb[:,0],mask_emb[:,1],'-o',linewidth=plot_linewidth)
+
         plt.xlim(mn[0],mx[0])
         plt.ylim(mn[1],mx[1])
         plt.xticks([])
@@ -566,6 +586,21 @@ class ghost():
         plt.subplot(1,2,2)
         plt.scatter(qemb[:,0],qemb[:,1],c=self.qy,alpha=alpha,vmin=vmin,vmax=vmax)
         plt.scatter(gemb[:,0],gemb[:,1],c=self.gy,alpha=alpha,vmin=vmin,vmax=vmax)
+
+        unique_qy = list(set(self.qy))
+        selected_qy = unique_qy[:max_classes]
+
+        unique_gy = list(set(self.gy))
+        selected_gy = unique_gy[:max_classes]
+
+        for i in range(len(selected_qy)):
+            mask = np.isin(self.qy, selected_qy[i])
+            mask_qemb = qemb[mask]
+            # plt.plot(mask_qemb[:,0],mask_qemb[:,1],'-o')
+            mask_gemb = gemb[np.isin(self.gy, selected_gy[i])]
+            # plt.plot(mask_gemb[:,0],mask_gemb[:,1],'-o')
+            mask_qgemb = np.concatenate([mask_qemb, mask_gemb])
+            plt.plot(mask_qgemb[:,0],mask_qgemb[:,1],'-o')
         plt.xlim(mn[0],mx[0])
         plt.ylim(mn[1],mx[1])
         plt.xticks([])
@@ -598,12 +633,12 @@ class ghost():
         plt.legend(frameon=True,framealpha=0.8)
 
     def plot_match(self, sample, true_label=None, n=10):
-
+        
         if type(sample) is int:
             sample,sample0=self.qx[sample],sample
             if true_label is None:
                 true_label=self.qy[sample0]
-
+        
         embed=self.embed(np.array([sample]))
         dist=self.distance.multi_distance(self.gemb,embed)
         idx=np.argsort(dist)[:n]
@@ -653,7 +688,11 @@ class ghost():
         # Normalize the activation map between 0 and 1 for visualization
         activation_map = tf.maximum(activation_map, 0)  # Ensure non-negative values
         heatmap = activation_map[0] 
-        heatmap = heatmap / tf.math.reduce_max(heatmap)  # Normalize               
+        heatmap = heatmap / tf.math.reduce_max(heatmap)  # Normalize      
+        # Scale heatmap
+        heatmap = tf.expand_dims(heatmap, axis=-1)  # Now it has shape [height, width, 1]
+        heatmap = tf.image.resize(heatmap, (image.shape[1], image.shape[2]),method='bilinear')
+        heatmap = tf.squeeze(heatmap, axis=-1)  # Back to shape [height, width]         
 
         htm=heatmap.numpy()
         image=image[0]
@@ -714,9 +753,13 @@ class haunting(ghost):
             obj._preprocess()
             obj.tx,obj.ty,obj.qx,obj.qy,obj.gx,obj.gy=datasplit(obj.x,obj.y,obj.mods())
             obj._preprocess_train()
+
+        self.qx=self.objs[0].qx
+        self.gx=self.objs[0].gx
+
     def _embed(self,data):
         self._log("Embedding data using the ensemble",0)
-        return np.concatenate([obj.model._embed(data) for obj in self.objs],axis=1)
+        return np.concatenate([obj.model.embed(data) for obj in self.objs],axis=1)
 
     def _singular_eval(self):
         self._log("Starting ensemble type evaluation",1)
@@ -772,6 +815,23 @@ class haunting(ghost):
             ret.append([f"Submodel {i+1}:",1])
             ret.append([obj.explain(),2])
         return various_tags(ret)
+    
+    def embed(self,data):
+        self._log("Embedding data",0)
+        # self.assert_trained()
+        for obj in self.objs:
+            obj.assert_trained()
+        data=self.apply_later_preprocessing(data)
+
+        return self._embed(data)
+    
+    def plot_activation_heatmaps(self,image):
+        for obj in self.objs:
+            obj.plot_activation_heatmap(image)
+    
+    def plot_lossess(self):
+        for obj in self.objs:
+            obj.plot_loss()
 
 
 
