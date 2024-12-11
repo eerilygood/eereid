@@ -535,7 +535,7 @@ class ghost():
         return accs
 
 
-    def plot_embeddings(self,alpha=1.0):
+    def plot_embeddings(self,alpha=1.0,max_classes=5,plot_linewidth=0.5):
         self._log("Plotting the embeddings",1)
         from sklearn.decomposition import PCA
 
@@ -543,6 +543,19 @@ class ghost():
         emb=pca.fit_transform(self.emb)
         qemb=pca.transform(self.qemb)
         gemb=pca.transform(self.gemb)
+
+        # FA = FactorAnalysis(n_components=2)
+        # emb = FA.fit_transform(self.emb)
+        # qemb = FA.transform(self.qemb)
+        # gemb = FA.transform(self.gemb)
+
+        unique_ty = list(set(self.ty))
+        selected_ty = unique_ty[:max_classes]
+
+        # mask = np.isin(self.ty, selected_classes)
+        # mask_emb = emb[mask]
+        # mask_ty = np.array(self.ty)[mask]
+
 
         classes=list(set(self.y))
         vmin,vmax=min(classes),max(classes)
@@ -554,6 +567,13 @@ class ghost():
         plt.subplot(1,2,1)
 
         plt.scatter(emb[:,0],emb[:,1],c=self.ty,alpha=alpha,vmin=vmin,vmax=vmax)
+        # plt.plot(mask_emb[:,0],mask_emb[:,1],'-o')
+
+        for i in range(len(selected_ty)):
+            mask = np.isin(self.ty, selected_ty[i])
+            mask_emb = emb[mask]
+            plt.plot(mask_emb[:,0],mask_emb[:,1],'-o',linewidth=plot_linewidth)
+
         plt.xlim(mn[0],mx[0])
         plt.ylim(mn[1],mx[1])
         plt.xticks([])
@@ -566,6 +586,21 @@ class ghost():
         plt.subplot(1,2,2)
         plt.scatter(qemb[:,0],qemb[:,1],c=self.qy,alpha=alpha,vmin=vmin,vmax=vmax)
         plt.scatter(gemb[:,0],gemb[:,1],c=self.gy,alpha=alpha,vmin=vmin,vmax=vmax)
+
+        unique_qy = list(set(self.qy))
+        selected_qy = unique_qy[:max_classes]
+
+        unique_gy = list(set(self.gy))
+        selected_gy = unique_gy[:max_classes]
+
+        for i in range(len(selected_qy)):
+            mask = np.isin(self.qy, selected_qy[i])
+            mask_qemb = qemb[mask]
+            # plt.plot(mask_qemb[:,0],mask_qemb[:,1],'-o')
+            mask_gemb = gemb[np.isin(self.gy, selected_gy[i])]
+            # plt.plot(mask_gemb[:,0],mask_gemb[:,1],'-o')
+            mask_qgemb = np.concatenate([mask_qemb, mask_gemb])
+            plt.plot(mask_qgemb[:,0],mask_qgemb[:,1],'-o')
         plt.xlim(mn[0],mx[0])
         plt.ylim(mn[1],mx[1])
         plt.xticks([])
