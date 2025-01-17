@@ -11,3 +11,5 @@ from .advanced_graph import advanced_graph
 from .load_model import load_model
 from .modelzoo import modelzoo
 from .null import nothing
+from .custom_model_pytorch import custom_model_pytorch
+from .custom_model_pytorch import custom_model_pytorch as custom_pytorch
