@@ -13,3 +13,5 @@ from .modelzoo import modelzoo
 from .null import nothing
 from .custom_model_pytorch import custom_model_pytorch
 from .custom_model_pytorch import custom_model_pytorch as custom_pytorch
+from .resnet50ghost import resnet50ghost
+from .resnet50ghost import resnet50ghost as resnet50

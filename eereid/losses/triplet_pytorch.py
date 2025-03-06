@@ -13,10 +13,17 @@ class triplet_pytorch(loss):
 
     def build(self, mods):
         def func(y_true, y_pred):
+            # print(y_true.shape,y_pred.shape)
             anchor, positive, negative = y_pred[0], y_pred[1], y_pred[2]
+            # print("anchor.shape: ",anchor.shape)
+            # print("positive.shape: ",positive.shape)
+            # print("negative.shape: ",negative.shape)
             positive_dist = torch.sum((anchor - positive) ** 2, dim=-1)
             negative_dist = torch.sum((anchor - negative) ** 2, dim=-1)
-            return torch.mean(F.relu(positive_dist - negative_dist + self.margin))
+            # print("positive_dist.shape: ",positive_dist.shape)
+            # print("negative_dist.shape: ",negative_dist.shape)
+
+            return torch.mean(F.relu(positive_dist - negative_dist + self.margin),dim=-1)
 
         return func
 
