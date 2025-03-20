@@ -15,7 +15,7 @@ Navigate to the installation directory and run install.sh in a terminal to insta
 
 ```sh install.sh```
 
-And that's it - With only five required moldues installed, you are now good to go!
+And that's it - With only five required modules installed, you are now good to go!
 
 # How can I get started?
 
