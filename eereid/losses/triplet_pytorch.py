@@ -2,9 +2,14 @@ from eereid.losses.loss import loss
 
 import numpy as np
 
-import torch
-import torch.nn as nn
-import torch.nn.functional as F
+try :
+    import torch
+    import torch.nn as nn
+    import torch.nn.functional as F
+except ImportError:
+    from eereid.importhelper import importhelper
+    torch=importhelper("torch","triplet_pytorch","pip install torch")
+
 
 class triplet_pytorch(loss):
     def __init__(self, margin=1.0):

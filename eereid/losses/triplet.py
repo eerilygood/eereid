@@ -11,36 +11,26 @@ except ImportError:
     torch=importhelper("torch","wrapmodel_pytorch","pip install torch")
 
 class triplet(loss):
-    def __init__(self, margin=1.0,pytorch=False):
+    def __init__(self, margin=1.0):
         self.margin = margin
-        self.pytorch=pytorch
+        # self.pytorch=pytorch
         super().__init__("triplet")
 
-    def build(self,mods):
-        if not self.pytorch:
-            def func(y_true, y_pred):
-                # print(y_true.shape,y_pred.shape)
-                #exit()
+    def build(self,mods):   
+
+        def func(y_true, y_pred,use_pytorch=False):
+            if not use_pytorch:
+
                 anchor, positive, negative = y_pred[0], y_pred[1], y_pred[2]
-                # print("anchor.shape: ",anchor.shape)
-                # print("positive.shape: ",positive.shape)
-                # print("negative.shape: ",negative.shape)
                 positive_dist = K.sum(K.square(anchor - positive), axis=-1)
                 negative_dist = K.sum(K.square(anchor - negative), axis=-1)
-                # print("positive_dist.shape: ",positive_dist.shape)
-                # print("negative_dist.shape: ",negative_dist.shape)
+
                 return K.mean(K.maximum(positive_dist - negative_dist + self.margin, 0), axis=-1)
-        else:
-            def func(y_true, y_pred):
-                # print(y_true.shape,y_pred.shape)
+            else:
+
                 anchor, positive, negative = y_pred[0], y_pred[1], y_pred[2]
-                # print("anchor.shape: ",anchor.shape)
-                # print("positive.shape: ",positive.shape)
-                # print("negative.shape: ",negative.shape)
                 positive_dist = torch.sum((anchor - positive) ** 2, dim=-1)
                 negative_dist = torch.sum((anchor - negative) ** 2, dim=-1)
-                # print("positive_dist.shape: ",positive_dist.shape)
-                # print("negative_dist.shape: ",negative_dist.shape)
 
                 return torch.mean(F.relu(positive_dist - negative_dist + self.margin),dim=-1)
         return func
