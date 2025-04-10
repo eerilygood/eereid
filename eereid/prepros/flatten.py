@@ -17,7 +17,7 @@ class flatten(prepro):
     def _apply_special(self,eereid):
         eereid.input_shape=list(eereid.input_shape)
         eereid.input_shape[0]=np.prod(eereid.input_shape)
-        eereid.input_shape=eeeid.input_shape[:1]
+        eereid.input_shape=eereid.input_shape[:1]
 
     def save(self,pth,index):
         super().save(pth,index,size=size)

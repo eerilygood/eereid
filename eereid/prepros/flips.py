@@ -13,7 +13,7 @@ class flips(prepro):
         datas.append(np.flip(data,2))
         datas.append(np.flip(datas[-1],1))
         datas=np.concatenate(datas,axis=0)
-        labels=np.tile(labels,3)
+        labels=np.tile(labels,4)
 
         rnd=np.random.RandomState(self.seed)
         idx=rnd.permutation(datas.shape[0])

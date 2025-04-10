@@ -18,11 +18,11 @@ class resize(prepro):
 
     def _apply_special(self,eereid):
         eereid.input_shape=list(eereid.input_shape)
-        eereid.input_shape[0]=self.size[0]
-        eereid.input_shape[1]=self.size[1]
+        eereid.input_shape[1]=self.size[0]
+        eereid.input_shape[0]=self.size[1]
 
     def save(self,pth,index):
-        super().save(pth,index,size=size)
+        super().save(pth,index,size=self.size)
 
     def stage(self):return "general"
     def order(self):return 2

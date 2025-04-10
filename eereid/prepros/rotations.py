@@ -1,5 +1,6 @@
 from eereid.prepros.prepro import prepro
 import numpy as np
+import warnings
 
 class rotations(prepro):
     def __init__(self,seed=42):
@@ -8,8 +9,16 @@ class rotations(prepro):
 
     def apply(self, data, labels, eereid):
         datas=[]
-        for i in range(4):
-            datas.append(np.rot90(data,i,axes=(1,2)))
+        if data.shape[1]!=data.shape[2]:
+            warnings.warn("The input data does not have equal width and height. Rotations may not work as expected.")
+
+            datas.append(data)
+            datas.append(np.rot90(data,2,axes=(1,2)))
+        else:
+            for i in range(4):
+                datas.append(np.rot90(data,i,axes=(1,2)))
+                # datas.append(np.rot180(data,i,axes=(2,3)))
+                print(datas[-1].shape)
         datas=np.concatenate(datas,axis=0)
         labels=np.tile(labels,4)
 

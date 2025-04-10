@@ -13,7 +13,8 @@ class normalize(prepro):
 
     def _apply_one(self, image):
         mx,mn=np.max(image),np.min(image)
-        return (image-mn)/(mx-mn)
+        # im = ((image - mn) / (mx - mn)).astype(np.float32)
+        return ((image-mn)/(mx-mn)).astype(np.float16) 
 
     def _apply_special(self,eereid):
         pass

@@ -13,6 +13,7 @@ try:
 except ImportError:
     from eereid.importhelper import importhelper
     torch=importhelper("torch","wrapmodel_pytorch","pip install torch")
+    nn=importhelper("torch.nn","wrapmodel_pytorch","pip install torch")
 
 # import torch.optim as optim
 # import torch.nn.functional as F
@@ -50,9 +51,13 @@ class wrapmodel_pytorch(model):
         # self.pytorch_criterion = nn.TripletMarginLoss(margin=1.0, p=2)
 
         # loss_obj = triplet_pytorch(margin=1.0)
-        loss_obj = triplet(margin=1.0, pytorch=True)
+        # loss_obj = triplet(margin=1.0, pytorch=True)
+
+        # loss_obj = loss
         
-        self.pytorch_criterion = loss_obj.build(None)
+        # self.pytorch_criterion = loss_obj.build(None)
+
+        self.pytorch_criterion = loss
         if optimizer == "adam":
             self.pytorch_optimizer = torch.optim.Adam(self.submodel.parameters(), lr=0.001)
         elif optimizer == "sgd":
@@ -81,23 +86,31 @@ class wrapmodel_pytorch(model):
                 self.pytorch_optimizer.zero_grad()
 
                 # outputs = model_net(inputs) # might need to change this
-                # print("inputs: ", inputs.shape)
-                anchor, positive, negative = inputs[:, 0], inputs[:, 1], inputs[:, 2]
+                # print("inputs: ", inputs.shape[1])
+                outputs_list = [] 
+                for j in range(inputs.shape[1]):
+                    output = inputs[:, j]
+                    output = output.permute(0, 3, 1, 2)
+                    output = output.float()
+                    outputs_list.append(output)
+                outputs = torch.stack([self.submodel(output) for output in outputs_list], dim=0)
 
-                anchor = anchor.permute(0, 3, 1, 2)
-                positive = positive.permute(0, 3, 1, 2)
-                negative = negative.permute(0, 3, 1, 2)
-                anchor = anchor.float()
-                positive = positive.float()
-                negative = negative.float()
-                # print("anchor: ", anchor.shape)
-                # print("positive: ", positive.shape)
-                # print("negative: ", negative.shape)
-                
-                outputs = torch.stack([self.submodel(anchor), self.submodel(positive), self.submodel(negative)], dim=0)
+
+                # Section to debug
+                # anchor, positive, negative = inputs[:, 0], inputs[:, 1], inputs[:, 2]
+
+                # anchor = anchor.permute(0, 3, 1, 2)
+                # positive = positive.permute(0, 3, 1, 2)
+                # negative = negative.permute(0, 3, 1, 2)
+                # anchor = anchor.float()
+                # positive = positive.float()
+                # negative = negative.float()
+                # outputs = torch.stack([self.submodel(anchor), self.submodel(positive), self.submodel(negative)], dim=0)
+
+                # end of debug section
                 outputs = outputs.requires_grad_(True)
 
-                loss = self.pytorch_criterion(labels, outputs)
+                loss = self.pytorch_criterion(labels, outputs,use_pytorch=True)
                 loss.backward()
                 self.pytorch_optimizer.step()
 
